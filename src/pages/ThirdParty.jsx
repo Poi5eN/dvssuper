@@ -1,42 +1,59 @@
-import { useState, useEffect } from 'react';
-import Select from 'react-select';
-import api from '../api/axiosInstance';
+import { useState, useEffect } from "react";
+import Select from "react-select";
+import api from "../api/axiosInstance";
+import ReactPaginate from "react-paginate";
+import { FaUserPlus, FaTimes, FaSchool } from "react-icons/fa";
 
 const ThirdParty = () => {
-  const [superId, setSuperID] = useState('');
+  const [superId, setSuperID] = useState("");
   const [thirdParty, setThirdParty] = useState([]);
   const [admin, setAdmin] = useState([]);
   const [school, setSchool] = useState([]);
   const [image, setImage] = useState(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    superAdminId: '',
+    name: "",
+    email: "",
+    password: "",
+    superAdminId: "",
     assignedSchools: [],
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  // Pagination
+  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (user?.superAdminId) {
+      setSuperID(user.superAdminId);
+      setFormData((prev) => ({
+        ...prev,
+        superAdminId: user.superAdminId,
+      }));
       fetchAdmin(user.superAdminId);
       fetchThirdParty(user.superAdminId);
-      setSuperID(user.superAdminId);
-      setFormData((prev) => ({ ...prev, superAdminId: user.superAdminId }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchThirdParty = async (superAdminId) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/superAdmin/thirdparty/${superAdminId}`);
-      if (data?.thirdPartyUsers) setThirdParty(data.thirdPartyUsers);
-    } catch (error) {
-      setError('Failed to fetch third-party users.');
+      const { data } = await api.get(
+        `/superAdmin/thirdparty/${superAdminId}`
+      );
+      if (data?.thirdPartyUsers) {
+        console.log("Third-party users fetched:", data.thirdPartyUsers); // Debugging
+        setThirdParty(data.thirdPartyUsers);
+      }
+    } catch (err) {
+      setError("Failed to fetch third-party users.");
+      console.error("Fetch third-party error:", err);
     } finally {
       setLoading(false);
     }
@@ -45,10 +62,13 @@ const ThirdParty = () => {
   const fetchAdmin = async (superAdminId) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/superAdmin/getAdmins/${superAdminId}`);
+      const { data } = await api.get(
+        `/superAdmin/getAdmins/${superAdminId}`
+      );
       if (data?.admins) setAdmin(data.admins);
-    } catch (error) {
-      setError('Failed to fetch admin list.');
+    } catch (err) {
+      setError("Failed to fetch admin list.");
+      console.error("Fetch admin error:", err);
     } finally {
       setLoading(false);
     }
@@ -74,33 +94,41 @@ const ThirdParty = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const payload = new FormData();
-      payload.append('name', formData.name);
-      payload.append('email', formData.email);
-      payload.append('password', formData.password);
-      payload.append('superAdminId', formData.superAdminId);
-      if (image) payload.append('image', image);
-      // Stringify the assignedSchools array
-      payload.append('assignedSchools', JSON.stringify(formData.assignedSchools));
+      payload.append("name", formData.name);
+      payload.append("email", formData.email);
+      payload.append("password", formData.password);
+      payload.append("superAdminId", formData.superAdminId);
+      if (image) payload.append("image", image);
+      payload.append(
+        "assignedSchools",
+        JSON.stringify(formData.assignedSchools)
+      );
 
-      const response = await api.post('/superAdmin/createThirdParty', payload, {
-        headers: {
-          'Content-Type': 'multipart/form-data', // Explicitly set, though Axios usually handles this
-        },
-      });
+      const response = await api.post(
+        "/superAdmin/createThirdParty",
+        payload,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       if (response?.data?.success) {
-        alert('Third-Party User Created Successfully!');
-        fetchThirdParty(formData.superAdminId);
+        alert("Third-Party User Created Successfully!");
+        await fetchThirdParty(formData.superAdminId);
         resetForm();
+        setShowModal(false);
       }
-    } catch (error) {
-      console.error('Error creating third-party user:', error.response?.data || error.message);
-      setError(error.response?.data?.message || 'Failed to process request');
+    } catch (err) {
+      console.error(
+        "Error creating third-party user:",
+        err.response?.data || err.message
+      );
+      setError(err.response?.data?.message || "Failed to process request");
     } finally {
       setLoading(false);
     }
@@ -108,14 +136,14 @@ const ThirdParty = () => {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      email: '',
-      password: '',
+      name: "",
+      email: "",
+      password: "",
       superAdminId: superId,
       assignedSchools: [],
     });
     setImage(null);
-    setSchool([]); // Reset school state as well
+    setSchool([]);
   };
 
   const adminOptions = admin.map((val) => ({
@@ -123,110 +151,267 @@ const ThirdParty = () => {
     label: val.schoolName,
   }));
 
+  // Pagination logic
+  const pageCount = Math.ceil(thirdParty.length / itemsPerPage);
+  const handlePageClick = (event) => {
+    setCurrentPage(event.selected);
+  };
+  const paginatedThirdParty = thirdParty.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
   return (
-    <div className="p-6 rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Create Third-Party User</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Name"
-          required
-          className="w-full p-2 border rounded"
-        />
-
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="Enter Email"
-          required
-          className="w-full p-2 border rounded"
-        />
-
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Enter Password"
-          required
-          className="w-full p-2 border rounded"
-        />
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="w-full p-2 border rounded"
-        />
-
-        <div className="col-span-full">
-          <Select
-            options={adminOptions}
-            isMulti
-            onChange={handleMultiSelectChange}
-            placeholder="Select Schools"
-            value={adminOptions.filter((option) =>
-              formData.assignedSchools.some((school) => school.schoolId === option.value)
-            )} // Sync with formData.assignedSchools
-            className="w-full"
-          />
-        </div>
-
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white shadow-2xl rounded-xl mt-6">
+      {/* Header & Create Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
+          Third-Party User Management
+        </h2>
         <button
-          type="submit"
-          className="col-span-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          disabled={loading}
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
+          className="flex items-center bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold px-4 sm:px-5 py-2 sm:py-3 rounded-lg shadow-lg hover:from-green-700 hover:to-teal-700 transition duration-300"
         >
-          {loading ? 'Creating User...' : 'Create Third-Party User'}
+          <FaUserPlus className="mr-2 text-lg sm:text-xl" />
+          Create Third-Party
         </button>
-      </form>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-center font-medium">
+          {error}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                Create Third-Party User
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-500 hover:text-gray-700 transition"
+                title="Close Modal"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            <form
+              onSubmit={handleSubmit}
+              className="px-4 sm:px-6 py-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+            >
+              {/* Name */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Name"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter Email"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition"
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter Password"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition"
+                />
+              </div>
+
+              {/* Image Upload */}
+              <div className="col-span-full sm:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Profile Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition"
+                />
+              </div>
+
+              {/* Assigned Schools */}
+              <div className="col-span-full">
+                <label className="block text-gray-700 font-semibold mb-1">
+                  Assigned Schools
+                </label>
+                <Select
+                  options={adminOptions}
+                  isMulti
+                  onChange={handleMultiSelectChange}
+                  placeholder={
+                    <>
+                      <FaSchool className="inline-block mr-1 text-teal-500" />
+                      Select Schools
+                    </>
+                  }
+                  value={adminOptions.filter((option) =>
+                    formData.assignedSchools.some(
+                      (school) => school.schoolId === option.value
+                    )
+                  )}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Submit */}
+              <div className="col-span-full text-center mt-4">
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold px-5 py-2 rounded-lg shadow-lg hover:from-green-700 hover:to-teal-700 transition duration-300 inline-flex items-center"
+                  disabled={loading}
+                >
+                  {loading ? "Creating..." : "Create User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Third-Party Users Table */}
       <div className="mt-8">
         <h3 className="text-xl font-semibold mb-4">Third-Party Users List</h3>
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2">Name</th>
-              <th className="p-2">Email</th>
-              <th className="p-2">Assigned Schools</th>
-              <th className="p-2">Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {thirdParty.length > 0 ? (
-              thirdParty.map((val) => (
-                <tr key={val._id} className="border-b">
-                  <td className="p-2">{val.name}</td>
-                  <td className="p-2">{val.email}</td>
-                  <td className="p-2">
-                    {val.assignedSchools
-                      .map((school) => school.schoolName)
-                      .join(', ')}
-                  </td>
-                  <td className="p-2">{val.address}</td>
-                </tr>
-              ))
-            ) : (
+        <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
+          <table className="w-full table-auto text-sm text-gray-800">
+            <thead className="bg-gradient-to-r from-green-50 to-teal-100 text-teal-900 sticky top-0 z-10">
               <tr>
-                <td colSpan="4" className="p-4 text-center">
-                  No Third-Party Users Found
-                </td>
+                <th className="px-3 py-2 border min-w-[80px]">Photo</th>
+                <th className="px-3 py-2 border min-w-[120px]">Name</th>
+                <th className="px-3 py-2 border min-w-[200px]">Email</th>
+                <th className="px-3 py-2 border min-w-[120px]">Password</th>
+                <th className="px-3 py-2 border min-w-[200px]">Schools</th>
+                <th className="px-3 py-2 border min-w-[150px]">Address</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="p-4 text-center text-gray-500 font-medium"
+                  >
+                    Loading...
+                  </td>
+                </tr>
+              ) : paginatedThirdParty.length > 0 ? (
+                paginatedThirdParty.map((val) => (
+                  <tr
+                    key={val._id}
+                    className="hover:bg-gray-50 transition border-b border-gray-200"
+                  >
+                    <td className="px-3 py-2">
+                      {val.image?.url ? (
+                        <img
+                          src={val.image.url}
+                          alt="avatar"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                          N/A
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">{val.name}</td>
+                    <td className="px-3 py-2">{val.email}</td>
+                    <td className="px-3 py-2 text-rose-600 font-semibold">
+                      {val.password || "—"}
+                    </td>
+                    <td className="px-3 py-2">
+                      {val.assignedSchools
+                        ?.map((school) => school.schoolName)
+                        .join(", ") || "—"}
+                    </td>
+                    <td className="px-3 py-2">{val.address || "—"}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="p-4 text-center text-gray-500 font-medium"
+                  >
+                    No Third-Party Users Found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {pageCount > 1 && (
+          <div className="mt-6 flex justify-center">
+            <ReactPaginate
+              previousLabel={"← Previous"}
+              nextLabel={"Next →"}
+              breakLabel={"..."}
+              pageCount={pageCount}
+              marginPagesDisplayed={1}
+              pageRangeDisplayed={2}
+              onPageChange={handlePageClick}
+              forcePage={currentPage}
+              containerClassName={"flex flex-wrap justify-center gap-2"}
+              activeClassName={"text-white bg-teal-500 px-3 py-1 rounded"}
+              pageClassName={
+                "px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition"
+              }
+              previousClassName={
+                "px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition"
+              }
+              nextClassName={
+                "px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition"
+              }
+              breakClassName={"px-3 py-1 text-gray-500"}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default ThirdParty;
+
+
 
 
 
