@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import chroma from 'chroma-js'; 
 import Select from "react-select";
 import api from "../api/axiosInstance";
 import ReactPaginate from "react-paginate";
@@ -10,6 +11,7 @@ const ThirdParty = () => {
   const [admin, setAdmin] = useState([]);
   const [school, setSchool] = useState([]);
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null); // State for image preview
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,7 +19,14 @@ const ThirdParty = () => {
     password: "",
     superAdminId: "",
     assignedSchools: [],
+    session: "2025-2026", // default session
   });
+
+  const sessionOptions = [
+    { value: "2025-2026", label: "2025-2026", color: "#22d3ee" }, // Cyan
+    { value: "2026-2027", label: "2026-2027", color: "#38bdf8" }, // Blue
+    { value: "2027-2028", label: "2027-2028", color: "#a78bfa" }, // Purple
+  ];
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,6 +43,7 @@ const ThirdParty = () => {
       setFormData((prev) => ({
         ...prev,
         superAdminId: user.superAdminId,
+        session: "2025-2026",
       }));
       fetchAdmin(user.superAdminId);
       fetchThirdParty(user.superAdminId);
@@ -48,7 +58,7 @@ const ThirdParty = () => {
         `/superAdmin/thirdparty/${superAdminId}`
       );
       if (data?.thirdPartyUsers) {
-        console.log("Third-party users fetched:", data.thirdPartyUsers); // Debugging
+        console.log("Third-party users fetched:", data.thirdPartyUsers);
         setThirdParty(data.thirdPartyUsers);
       }
     } catch (err) {
@@ -80,7 +90,17 @@ const ThirdParty = () => {
   };
 
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    setImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
   };
 
   const handleMultiSelectChange = (selectedOptions) => {
@@ -102,6 +122,7 @@ const ThirdParty = () => {
       payload.append("name", formData.name);
       payload.append("email", formData.email);
       payload.append("password", formData.password);
+      payload.append("session", formData.session);
       payload.append("superAdminId", formData.superAdminId);
       if (image) payload.append("image", image);
       payload.append(
@@ -141,8 +162,10 @@ const ThirdParty = () => {
       password: "",
       superAdminId: superId,
       assignedSchools: [],
+      session: "2025-2026",
     });
     setImage(null);
+    setImagePreview(null);
     setSchool([]);
   };
 
@@ -161,8 +184,100 @@ const ThirdParty = () => {
     (currentPage + 1) * itemsPerPage
   );
 
+  // Custom styles for session dropdown with water-like animation
+  const customStyles = {
+    control: (base, state) => ({
+      ...base,
+      background: "linear-gradient(135deg, #ecfeff, #a5f3fc)",
+      borderRadius: "12px",
+      borderColor: state.isFocused ? "#0d9488" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 8px rgba(45,212,191,0.5)" : "none",
+      transition: "all 0.4s ease",
+      padding: "6px",
+      position: "relative",
+      overflow: "hidden",
+      zIndex: 1000, // High z-index for control
+      "&:before": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        left: "-100%",
+        width: "100%",
+        height: "100%",
+        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+        animation: state.isFocused ? "waterFlow 2s infinite" : "none",
+      },
+    }),
+    option: (styles, { data, isDisabled, isFocused, isSelected }) => {
+      const color = chroma(data.color);
+      return {
+        ...styles,
+        backgroundColor: isSelected
+          ? color.alpha(0.9).css()
+          : isFocused
+          ? color.alpha(0.2).css()
+          : "#ffffff",
+        color: isSelected ? "white" : "#1e293b",
+        cursor: isDisabled ? "not-allowed" : "pointer",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          backgroundColor: color.alpha(0.3).css(),
+          transform: "translateX(5px)",
+        },
+      };
+    },
+    singleValue: (styles, { data }) => ({
+      ...styles,
+      color: data.color,
+      fontWeight: "600",
+      transition: "color 0.4s ease",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 1001, // Higher z-index for dropdown menu
+      borderRadius: "8px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+      marginTop: "4px",
+    }),
+    menuList: (base) => ({
+      ...base,
+      maxHeight: "150px", // Limit height to ensure visibility
+    }),
+  };
+
+  // Custom styles for assigned schools to prevent overlap
+  const schoolSelectStyles = {
+    control: (base) => ({
+      ...base,
+      borderRadius: "8px",
+      borderColor: "#d1d5db",
+      boxShadow: "none",
+      padding: "4px",
+      zIndex: 998, // Lower z-index than session dropdown
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 999, // Lower than session dropdown menu
+      borderRadius: "8px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+      marginTop: "4px",
+    }),
+    menuList: (base) => ({
+      ...base,
+      maxHeight: "150px", // Limit height to prevent overlap
+    }),
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white shadow-2xl rounded-xl mt-6">
+      <style>
+        {`
+          @keyframes waterFlow {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(100%); }
+          }
+        `}
+      </style>
       {/* Header & Create Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
@@ -254,17 +369,46 @@ const ThirdParty = () => {
                 />
               </div>
 
-              {/* Image Upload */}
-              <div className="col-span-full sm:col-span-2">
-                <label className="block text-gray-700 font-semibold mb-1">
-                  Profile Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition"
-                />
+              {/* Image Upload + Preview + Session Dropdown */}
+              <div className="col-span-full sm:col-span-2 flex flex-col sm:flex-row gap-4 items-start">
+                {/* Image Uploader and Preview */}
+                <div className="flex-1">
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Profile Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition"
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Session Dropdown */}
+                <div className="flex-1 transition-all duration-500 ease-in-out transform hover:scale-105">
+                  <label className="block text-gray-700 font-semibold mb-1">
+                    Session
+                  </label>
+                  <Select
+                    className="w-full text-sm"
+                    value={sessionOptions.find(option => option.value === formData.session)}
+                    onChange={(selectedOption) =>
+                      setFormData((prev) => ({ ...prev, session: selectedOption.value }))
+                    }
+                    options={sessionOptions}
+                    isSearchable={false}
+                    styles={customStyles}
+                  />
+                </div>
               </div>
 
               {/* Assigned Schools */}
@@ -288,6 +432,7 @@ const ThirdParty = () => {
                     )
                   )}
                   className="w-full"
+                  styles={schoolSelectStyles}
                 />
               </div>
 
