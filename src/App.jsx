@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import SuperAdmin from './pages/SuperAdmin';
 import ThirdParty from './pages/ThirdParty';
 import Login from './pages/Login';
+import SuperAdminAlerts from './components/AlertManagement/SuperAdminAlerts';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         {/* Dashboard with Nested Routes */}
         <Route path="/dashboard" element={<Dashboard />}>
           <Route path="superadmin" element={<SuperAdmin />} />
+          <Route path="alerts" element={<SuperAdminAlerts />} />
           <Route path="thirdparty" element={<ThirdParty />} />
         </Route>
 

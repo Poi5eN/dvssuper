@@ -1,0 +1,8 @@
+# SPA fallback - redirect all routes to index.html for client-side routing
+/*    /index.html   200
+
+# API proxy (if needed)
+/api/*  https://api.digitalvidyasaarthi.in/api/:splat  200
+
+# Optional: Handle specific API routes if your backend is on a different domain
+# /api/v1/*  https://your-backend-domain.com/api/v1/:splat  200

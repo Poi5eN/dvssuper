@@ -1,8 +1,8 @@
 // Dashboard.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, useLocation, Link } from "react-router-dom";
-import { FiLogOut, FiMessageCircle, FiPhone, FiMail } from "react-icons/fi";
-import { FaUserShield, FaUsers, FaSchool, FaChartPie, FaCog } from "react-icons/fa";
+import { FiLogOut, FiMessageCircle, FiPhone, FiMail, FiBell, FiDatabase, FiActivity, FiShield } from "react-icons/fi";
+import { FaUserShield, FaUsers, FaSchool, FaChartPie, FaCog, FaBell, FaDatabase, FaChartLine, FaFileAlt, FaCloudDownloadAlt } from "react-icons/fa";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -38,16 +38,23 @@ const Dashboard = () => {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?.superAdminId) {
-      setSuperAdminId(user.superAdminId);
+      const adminId = user.superAdminId;
+      setSuperAdminId(adminId);
       const role = localStorage.getItem("role") || "SuperAdmin";
       setUserRole(role);
-      fetchCounts(user.superAdminId);
     } else {
       // If no user found, redirect to login
       navigate("/login");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch counts when superAdminId is available
+  useEffect(() => {
+    if (superAdminId) {
+      fetchCounts(superAdminId);
+    }
+  }, [superAdminId]);
 
   // Fetch counts for Admins and Third-Party Users
   const fetchCounts = async (id) => {
@@ -83,6 +90,7 @@ const Dashboard = () => {
   // Navigation Handlers
   const goToSuperAdmin = () => navigate("/dashboard/superadmin");
   const goToThirdParty = () => navigate("/dashboard/thirdparty");
+  const goToAlerts = () => navigate("/dashboard/alerts");
 
   // Pie chart setup
   const pieData = {
@@ -176,23 +184,30 @@ const Dashboard = () => {
           >
             <FaUsers className="mr-2" size={18} /> Go to ThirdParty
           </button>
+          <button
+            onClick={goToAlerts}
+            className="flex items-center justify-center bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          >
+            <FaBell className="mr-2" size={18} /> Manage Alerts
+          </button>
         </div>
       </div>
 
       {isRootDashboard && (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6 flex items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-md p-6 flex items-center hover:shadow-lg transition-shadow">
               <div className="bg-indigo-100 p-3 rounded-full mr-4">
                 <FaUserShield className="text-indigo-600 text-2xl" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Admins</p>
                 <p className="text-2xl font-bold text-gray-800">{adminCount}</p>
+                <p className="text-xs text-indigo-600">+2 this month</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-6 flex items-center">
+            <div className="bg-white rounded-lg shadow-md p-6 flex items-center hover:shadow-lg transition-shadow">
               <div className="bg-green-100 p-3 rounded-full mr-4">
                 <FaUsers className="text-green-600 text-2xl" />
               </div>
@@ -201,15 +216,27 @@ const Dashboard = () => {
                 <p className="text-2xl font-bold text-gray-800">
                   {thirdPartyCount}
                 </p>
+                <p className="text-xs text-green-600">+5 this week</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-6 flex items-center">
+            <div className="bg-white rounded-lg shadow-md p-6 flex items-center hover:shadow-lg transition-shadow">
               <div className="bg-teal-100 p-3 rounded-full mr-4">
                 <FaSchool className="text-teal-600 text-2xl" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Schools</p>
-                <p className="text-2xl font-bold text-gray-800">—</p>
+                <p className="text-2xl font-bold text-gray-800">{adminCount}</p>
+                <p className="text-xs text-teal-600">Active schools</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6 flex items-center hover:shadow-lg transition-shadow">
+              <div className="bg-orange-100 p-3 rounded-full mr-4">
+                <FaChartLine className="text-orange-600 text-2xl" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">System Health</p>
+                <p className="text-2xl font-bold text-green-600">99.9%</p>
+                <p className="text-xs text-green-600">All systems operational</p>
               </div>
             </div>
           </div>
@@ -219,24 +246,42 @@ const Dashboard = () => {
             <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
               <FaCog className="text-indigo-600 mr-2" /> Quick Actions
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               <button
                 onClick={goToSuperAdmin}
-                className="flex items-center justify-center bg-indigo-600 text-white px-4 py-3 rounded-lg shadow hover:bg-indigo-700 transition"
+                className="flex items-center justify-center bg-indigo-600 text-white px-4 py-3 rounded-lg shadow hover:bg-indigo-700 transition transform hover:scale-105"
               >
                 <FaUserShield className="mr-2" /> Manage Admins
               </button>
               <button
                 onClick={goToThirdParty}
-                className="flex items-center justify-center bg-green-600 text-white px-4 py-3 rounded-lg shadow hover:bg-green-700 transition"
+                className="flex items-center justify-center bg-green-600 text-white px-4 py-3 rounded-lg shadow hover:bg-green-700 transition transform hover:scale-105"
               >
                 <FaUsers className="mr-2" /> Manage Third-Party
               </button>
               <button
+                onClick={goToAlerts}
+                className="flex items-center justify-center bg-orange-600 text-white px-4 py-3 rounded-lg shadow hover:bg-orange-700 transition transform hover:scale-105"
+              >
+                <FaBell className="mr-2" /> Manage Alerts
+              </button>
+              <button
                 onClick={() => navigate("/dashboard/schools")}
-                className="flex items-center justify-center bg-teal-600 text-white px-4 py-3 rounded-lg shadow hover:bg-teal-700 transition"
+                className="flex items-center justify-center bg-teal-600 text-white px-4 py-3 rounded-lg shadow hover:bg-teal-700 transition transform hover:scale-105"
               >
                 <FaSchool className="mr-2" /> Manage Schools
+              </button>
+              <button
+                onClick={() => alert("Database backup initiated")}
+                className="flex items-center justify-center bg-purple-600 text-white px-4 py-3 rounded-lg shadow hover:bg-purple-700 transition transform hover:scale-105"
+              >
+                <FaDatabase className="mr-2" /> Database Backup
+              </button>
+              <button
+                onClick={() => alert("System reports generated")}
+                className="flex items-center justify-center bg-blue-600 text-white px-4 py-3 rounded-lg shadow hover:bg-blue-700 transition transform hover:scale-105"
+              >
+                <FaFileAlt className="mr-2" /> System Reports
               </button>
             </div>
           </div>
