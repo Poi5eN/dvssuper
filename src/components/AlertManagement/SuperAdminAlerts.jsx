@@ -24,7 +24,13 @@ const SuperAdminAlerts = () => {
     priority: 'medium',
     duration: '',
     targetAudience: 'all',
-    isGlobal: true
+    isGlobal: true,
+    // Enhanced scheduling options
+    scheduledFor: '',
+    dayOfWeek: '',
+    startTime: '',
+    endTime: '',
+    isScheduled: false
   });
 
   // Use centralized API configuration
@@ -491,6 +497,81 @@ const SuperAdminAlerts = () => {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                     placeholder="Leave empty for persistent alert"
                   />
+                </div>
+
+                {/* Enhanced Scheduling Options */}
+                <div className="col-span-2 border-t border-gray-200 dark:border-gray-600 pt-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      name="isScheduled"
+                      checked={formData.isScheduled}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Schedule Alert for Specific Time
+                    </label>
+                  </div>
+
+                  {formData.isScheduled && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Day of Week
+                        </label>
+                        <select
+                          name="dayOfWeek"
+                          value={formData.dayOfWeek}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                        >
+                          <option value="">Select Day</option>
+                          <option value="sunday">Sunday</option>
+                          <option value="monday">Monday</option>
+                          <option value="tuesday">Tuesday</option>
+                          <option value="wednesday">Wednesday</option>
+                          <option value="thursday">Thursday</option>
+                          <option value="friday">Friday</option>
+                          <option value="saturday">Saturday</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          name="startTime"
+                          value={formData.startTime}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          name="endTime"
+                          value={formData.endTime}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+
+                      <div className="col-span-3">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            <strong>Example:</strong> To show an alert on Sunday from 5:00 PM to 7:00 PM, select "Sunday", set start time to "17:00" and end time to "19:00".
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
