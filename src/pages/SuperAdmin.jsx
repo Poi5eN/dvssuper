@@ -72,6 +72,40 @@ const SuperAdmin = () => {
     setCurrentPage(0);
   };
 
+  // Enhanced filtering and sorting
+  const getFilteredAndSortedAdmins = () => {
+    let filtered = allAdmin.filter((admin) => {
+      const matchesSearch = admin.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           admin.schoolName.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus = statusFilter === 'all' || admin.status === statusFilter;
+      const matchesCity = !cityFilter || admin.schoolCity?.toLowerCase().includes(cityFilter.toLowerCase());
+      const matchesState = !stateFilter || admin.schoolState?.toLowerCase().includes(stateFilter.toLowerCase());
+
+      return matchesSearch && matchesStatus && matchesCity && matchesState;
+    });
+
+    // Sort admins
+    filtered.sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+
+      if (sortBy === 'createdAt') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  };
+
   // Filter then paginate
   const filteredAdmins = getFilteredAndSortedAdmins();
   const paginatedAdmins = filteredAdmins.slice(
@@ -133,40 +167,6 @@ const SuperAdmin = () => {
     } catch {
       setError("Failed to fetch admin details.");
     }
-  };
-
-  // Enhanced filtering and sorting
-  const getFilteredAndSortedAdmins = () => {
-    let filtered = allAdmin.filter((admin) => {
-      const matchesSearch = admin.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           admin.schoolName.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = statusFilter === 'all' || admin.status === statusFilter;
-      const matchesCity = !cityFilter || admin.schoolCity?.toLowerCase().includes(cityFilter.toLowerCase());
-      const matchesState = !stateFilter || admin.schoolState?.toLowerCase().includes(stateFilter.toLowerCase());
-
-      return matchesSearch && matchesStatus && matchesCity && matchesState;
-    });
-
-    // Sort admins
-    filtered.sort((a, b) => {
-      let aValue = a[sortBy];
-      let bValue = b[sortBy];
-
-      if (sortBy === 'createdAt') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    return filtered;
   };
 
   // Bulk operations
@@ -521,6 +521,7 @@ const SuperAdmin = () => {
               <th className="px-3 py-2 border">Photo</th>
               <th className="px-3 py-2 border">Name</th>
               <th className="px-3 py-2 border">Email</th>
+              <th className="px-3 py-2 border">Password</th>
               <th className="px-3 py-2 border">School</th>
               <th className="px-3 py-2 border">Contact</th>
               <th className="px-3 py-2 border">City</th>
@@ -560,6 +561,7 @@ const SuperAdmin = () => {
                   </td>
                   <td className="px-3 py-2 font-medium">{admin.fullName}</td>
                   <td className="px-3 py-2">{admin.email}</td>
+                  <td className="px-3 py-2">{admin.password || "—"}</td>
                   <td className="px-3 py-2">{admin.schoolName}</td>
                   <td className="px-3 py-2">{admin.contact || "—"}</td>
                   <td className="px-3 py-2">{admin.schoolCity || "—"}</td>
@@ -607,7 +609,7 @@ const SuperAdmin = () => {
             ) : (
               <tr>
                 <td
-                  colSpan="11"
+                  colSpan="12"
                   className="text-center py-6 text-gray-500 font-medium"
                 >
                   No admins found.
