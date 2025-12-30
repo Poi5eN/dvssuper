@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { PostHogProvider } from "posthog-js/react";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const options = {
   api_host: "https://eu.i.posthog.com",
@@ -15,7 +16,9 @@ createRoot(document.getElementById("root")).render(
       apiKey={import.meta.env.VITE_POSTHOG_KEY}
       options={options}
     >
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </PostHogProvider>
   </StrictMode>
 );
