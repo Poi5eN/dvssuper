@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import chroma from 'chroma-js'; 
+import chroma from "chroma-js";
 import Select from "react-select";
 import api from "../api/axiosInstance";
 import ReactPaginate from "react-paginate";
@@ -9,6 +9,7 @@ const ThirdParty = () => {
   const [superId, setSuperID] = useState("");
   const [thirdParty, setThirdParty] = useState([]);
   const [admin, setAdmin] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [school, setSchool] = useState([]);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null); // State for image preview
@@ -54,9 +55,7 @@ const ThirdParty = () => {
   const fetchThirdParty = async (superAdminId) => {
     try {
       setLoading(true);
-      const { data } = await api.get(
-        `/superAdmin/thirdparty/${superAdminId}`
-      );
+      const { data } = await api.get(`/superAdmin/thirdparty/${superAdminId}`);
       if (data?.thirdPartyUsers) {
         console.log("Third-party users fetched:", data.thirdPartyUsers);
         setThirdParty(data.thirdPartyUsers);
@@ -72,9 +71,7 @@ const ThirdParty = () => {
   const fetchAdmin = async (superAdminId) => {
     try {
       setLoading(true);
-      const { data } = await api.get(
-        `/superAdmin/getAdmins/${superAdminId}`
-      );
+      const { data } = await api.get(`/superAdmin/getAdmins/${superAdminId}`);
       if (data?.admins) setAdmin(data.admins);
     } catch (err) {
       setError("Failed to fetch admin list.");
@@ -130,13 +127,9 @@ const ThirdParty = () => {
         JSON.stringify(formData.assignedSchools)
       );
 
-      const response = await api.post(
-        "/superAdmin/createThirdParty",
-        payload,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const response = await api.post("/superAdmin/createThirdParty", payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (response?.data?.success) {
         alert("Third-Party User Created Successfully!");
@@ -204,7 +197,8 @@ const ThirdParty = () => {
         left: "-100%",
         width: "100%",
         height: "100%",
-        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+        background:
+          "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
         animation: state.isFocused ? "waterFlow 2s infinite" : "none",
       },
     }),
@@ -400,9 +394,14 @@ const ThirdParty = () => {
                   </label>
                   <Select
                     className="w-full text-sm"
-                    value={sessionOptions.find(option => option.value === formData.session)}
+                    value={sessionOptions.find(
+                      (option) => option.value === formData.session
+                    )}
                     onChange={(selectedOption) =>
-                      setFormData((prev) => ({ ...prev, session: selectedOption.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        session: selectedOption.value,
+                      }))
                     }
                     options={sessionOptions}
                     isSearchable={false}
@@ -556,12 +555,6 @@ const ThirdParty = () => {
 
 export default ThirdParty;
 
-
-
-
-
-
-
 // import { useState, useEffect } from 'react';
 // import Select from 'react-select';
 // import api from '../api/axiosInstance'; // Ensure correct Axios instance path
@@ -651,12 +644,12 @@ export default ThirdParty;
 //   console.log("formData",formData)
 //   // Handle Form Submission (Create Third-Party User)
 //   const handleSubmit = async (e) => {
-//     const payload={ 
+//     const payload={
 //       name: formData?.name,
 //       email:formData?.email,
 //       password: formData?.password,
 //       superAdminId:formData?.superAdminId ,
-//       assignedSchools: school  
+//       assignedSchools: school
 //     }
 //     e.preventDefault();
 //     setError('');
@@ -801,8 +794,6 @@ export default ThirdParty;
 
 // export default ThirdParty;
 
-
-
 // import { useState, useEffect } from 'react';
 // import api from '../api/axiosInstance'; // Ensure correct Axios instance path
 
@@ -832,7 +823,7 @@ export default ThirdParty;
 //       setSuperID(user.superAdminId);
 //       setFormData((prev) => ({ ...prev, superAdminId: user.superAdminId }));
 //       fetchThirdParty(user.superAdminId); // Fetch Admins
-     
+
 //     }
 //   }, []);
 
@@ -1019,7 +1010,6 @@ export default ThirdParty;
 
 // export default ThirdParty;
 
-
 // const ThirdParty = ({ data }) => {
 //     return (
 //       <div className="bg-yellow-200 p-4 rounded-lg">
@@ -1028,6 +1018,5 @@ export default ThirdParty;
 //       </div>
 //     );
 //   };
-  
+
 //   export default ThirdParty;
-  
